@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>勇者九九：數字森林大冒險</title>
+    <style>
+        :root {
+            --primary-color: #FF9F43;
+            --secondary-color: #54a0ff;
+            --success-color: #1dd1a1;
+            --error-color: #ff6b6b;
+            --bg-color: #feca57;
+            --text-color: #2f3542;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(#ff9f43 15%, transparent 16%), radial-gradient(#ff9f43 15%, transparent 16%);
+            background-size: 60px 60px;
+            background-position: 0 0, 30px 30px;
+            /* 防止手機雙擊縮放 */
+            touch-action: manipulation; 
+        }
+
+        .game-container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 10px 0 rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 5px solid #fff;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 強制隱藏類別 - 修正優先級問題 */
+        .hidden {
+            display: none !important;
+        }
+
+        h1, h2 {
+            color: var(--text-color);
+            margin: 10px 0;
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #576574;
+            margin: 10px 0 20px 0;
+        }
+
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2e86de;
+            transition: transform 0.1s;
+            margin: 10px;
+            width: 80%;
+            max-width: 300px;
+            font-weight: bold;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        /* 遊戲畫面樣式 */
+        .game-content {
+            width: 100%;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 15px;
+            background-color: #eee;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 2px solid #dfe6e9;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--success-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .monster-area {
+            font-size: 5rem;
+            margin: 10px 0;
+            animation: bounce 2s infinite;
+            user-select: none;
+        }
+
+        .question-box {
+            background-color: #fff2cc;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: #d35400;
+            font-weight: bold;
+            border: 2px dashed #f39c12;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .option-btn {
+            background-color: #48dbfb;
+            box-shadow: 0 5px 0 #0abde3;
+            font-size: 1.5rem;
+            padding: 15px;
+            width: auto; /* 覆蓋通用btn寬度 */
+            margin: 0;
+        }
+        
+        .option-btn:active {
+            box-shadow: none;
+            transform: translateY(5px);
+        }
+
+        /* 回饋樣式 */
+        .feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.98);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .feedback-icon {
+            font-size: 6rem;
+            margin-bottom: 10px;
+        }
+
+        .correct { color: var(--success-color); }
+        .wrong { color: var(--error-color); }
+
+        .answer-text {
+            font-size: 1.4rem;
+            margin-bottom: 30px;
+            color: #2f3542;
+            font-weight: bold;
+            padding: 0 20px;
+        }
+
+        /* 結算畫面 */
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* 動畫 */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pop-in {
+            animation: popIn 0.3s ease-out forwards;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <!-- 首頁 -->
+        <div id="start-screen">
+            <div style="font-size: 4rem; margin-bottom: 20px;">🏰</div>
+            <h1>勇者九九<br>數字森林大冒險</h1>
+            <p>準備好接受 10 道乘法試煉了嗎？</p>
+            <button class="btn" onclick="startGame()">開始冒險</button>
+        </div>
+
+        <!-- 遊戲主畫面 -->
+        <div id="game-screen" class="game-content hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            
+            <div class="monster-area" id="monster">👾</div>
+            
+            <div class="question-box" id="question-text">
+                題目載入中...
+            </div>
+
+            <div class="options-grid" id="options-area">
+                <!-- 選項按鈕會在這裡產生 -->
+            </div>
+        </div>
+
+        <!-- 回饋畫面 (答對/答錯) - 這裡就是原本遮擋的地方，已修正 -->
+        <div id="feedback-screen" class="feedback-overlay hidden">
+            <div id="feedback-icon" class="feedback-icon"></div>
+            <h2 id="feedback-msg"></h2>
+            <p id="feedback-detail" class="answer-text"></p>
+            <button class="btn" onclick="nextQuestion()">下一題 ➔</button>
+        </div>
+
+        <!-- 結算畫面 -->
+        <div id="result-screen" class="result-content hidden">
+            <div style="font-size: 5rem;">🏆</div>
+            <h2>冒險結束！</h2>
+            <p style="font-size: 1.5rem; margin: 10px 0;">你的分數：<span id="final-score" style="color: #eb4d4b; font-weight:bold; font-size: 2rem;"></span> 分</p>
+            <p id="result-comment" style="font-weight: bold; color: #333;"></p>
+            <button class="btn" onclick="startGame()">重新挑戰</button>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態變數
+        let currentQuestion = 0;
+        let score = 0;
+        const totalQuestions = 10;
+        let currentAnswer = 0;
+        let currentProblemStr = "";
+        
+        // 文字題庫模板
+        const wordProblems = [
+            { t: "一隻蜘蛛有 8 條腿，<br>{a} 隻蜘蛛共有多少條腿？", n: 8 },
+            { t: "一盒彩色筆有 {a} 支，<br>{b} 盒共有多少支？", n: 0 }, 
+            { t: "一星期有 7 天，<br>{a} 個星期共有多少天？", n: 7 },
+            { t: "一輛車有 4 個輪子，<br>{a} 輛車共有多少個輪子？", n: 4 },
+            { t: "小明每天存 {a} 元，<br>存了 {b} 天共有多少元？", n: 0 },
+            { t: "一排椅子有 {a} 張，<br>{b} 排共有幾張椅子？", n: 0 },
+            { t: "一隻青蛙有 4 條腿，<br>{a} 隻青蛙共有多少條腿？", n: 4 },
+            { t: "一包糖果有 {a} 顆，<br>買了 {b} 包共有多少顆？", n: 0 },
+            { t: "三輪車有 3 個輪子，<br>{a} 輛車共有多少個輪子？", n: 3 },
+            { t: "一雙手套有 2 隻，<br>{a} 雙手套共有多少隻？", n: 2 }
+        ];
+
+        // 怪獸 Emoji 列表
+        const monsters = ["👾", "🐉", "👻", "👹", "🤖", "🦕", "🐙", "🦇", "🐺", "🧛"];
+
+        // 頁面載入時確保隱藏回饋層
+        window.onload = function() {
+             document.getElementById('feedback-screen').classList.add('hidden');
+        };
+
+        function startGame() {
+            currentQuestion = 0;
+            score = 0;
+            // 強制隱藏其他畫面
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('feedback-screen').classList.add('hidden');
+            
+            // 顯示遊戲畫面
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            generateQuestion();
+        }
+
+        function generateQuestion() {
+            // 更新進度條
+            let progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progress-fill').style.width = progress + "%";
+            
+            // 隨機更換怪獸
+            document.getElementById('monster').innerText = monsters[currentQuestion % monsters.length];
+
+            // 隨機決定題型：0-6為算式題，7-9為文字題
+            let type = Math.random();
+            let num1 = Math.floor(Math.random() * 9) + 1; // 1-9
+            let num2 = Math.floor(Math.random() * 9) + 1; // 1-9
+            
+            currentAnswer = num1 * num2;
+
+            if (type > 0.3) {
+                // 算式題
+                currentProblemStr = `${num1} × ${num2} = ?`;
+            } else {
+                // 文字題
+                let templateObj = wordProblems[Math.floor(Math.random() * wordProblems.length)];
+                let text = templateObj.t;
+                
+                if (templateObj.n !== 0) {
+                    num1 = templateObj.n; 
+                    currentAnswer = num1 * num2;
+                    text = text.replace("{a}", num2);
+                } else {
+                    text = text.replace("{a}", num1).replace("{b}", num2);
+                }
+                currentProblemStr = text;
+            }
+
+            document.getElementById('question-text').innerHTML = currentProblemStr; // 使用 innerHTML 支援換行
+            generateOptions(currentAnswer);
+        }
+
+        function generateOptions(correct) {
+            let options = new Set();
+            options.add(correct);
+
+            // 生成3個錯誤答案
+            while (options.size < 4) {
+                // 產生接近的錯誤答案以增加挑戰性
+                let offset = Math.floor(Math.random() * 10) - 5; 
+                let wrong = correct + offset;
+                
+                // 確保答案是正數且不等於正確答案
+                if (wrong > 0 && wrong !== correct) {
+                    options.add(wrong);
+                } else {
+                    // 如果 offset 失敗，隨機給一個乘法表的數
+                    let r1 = Math.floor(Math.random() * 9) + 1;
+                    let r2 = Math.floor(Math.random() * 9) + 1;
+                    let randomVal = r1 * r2;
+                    if(randomVal !== correct) options.add(randomVal);
+                }
+            }
+
+            // 打亂選項
+            let optionsArray = Array.from(options).sort(() => Math.random() - 0.5);
+
+            let html = '';
+            optionsArray.forEach(opt => {
+                html += `<button class="btn option-btn" onclick="checkAnswer(${opt})">${opt}</button>`;
+            });
+            document.getElementById('options-area').innerHTML = html;
+        }
+
+        function checkAnswer(selected) {
+            let feedbackScreen = document.getElementById('feedback-screen');
+            let icon = document.getElementById('feedback-icon');
+            let msg = document.getElementById('feedback-msg');
+            let detail = document.getElementById('feedback-detail');
+
+            // 移除 hidden 來顯示回饋
+            feedbackScreen.classList.remove('hidden');
+
+            // 移除之前的動畫 class 以便重新觸發
+            icon.classList.remove('pop-in');
+            void icon.offsetWidth; // 強制重繪 (Reflow)
+
+            if (selected === currentAnswer) {
+                score += 10;
+                icon.innerText = "✅";
+                icon.className = "feedback-icon pop-in correct";
+                msg.innerText = "答對了！";
+                msg.className = "correct";
+                // 處理文字題顯示，去除HTML標籤讓顯示更乾淨
+                let cleanProblem = currentProblemStr.replace("<br>", " ");
+                detail.innerText = `答案就是 ${currentAnswer}`;
+            } else {
+                icon.innerText = "❌";
+                icon.className = "feedback-icon pop-in wrong";
+                msg.innerText = "哎呀，答錯了...";
+                msg.className = "wrong";
+                detail.innerText = `正確答案是 ${currentAnswer} 喔！`;
+            }
+            
+            currentQuestion++;
+        }
+
+        function nextQuestion() {
+            document.getElementById('feedback-screen').classList.add('hidden');
+            
+            if (currentQuestion >= totalQuestions) {
+                endGame();
+            } else {
+                generateQuestion();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            // 動畫式跑分
+            let displayScore = 0;
+            let scoreElement = document.getElementById('final-score');
+            let timer = setInterval(() => {
+                if (displayScore >= score) {
+                    displayScore = score;
+                    clearInterval(timer);
+                } else {
+                    displayScore++;
+                }
+                scoreElement.innerText = displayScore;
+            }, 20);
+
+            let comment = "";
+            if (score === 100) comment = "太神了！你是數學大師！🌟";
+            else if (score >= 80) comment = "很棒喔！只差一點點！💪";
+            else if (score >= 60) comment = "不錯！繼續加油！🔥";
+            else comment = "沒關係，多練習幾次會變強的！🌱";
+            
+            document.getElementById('result-comment').innerText = comment;
+        }
+    </script>
+</body>
+</html>
